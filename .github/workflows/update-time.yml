@@ -1,30 +1,47 @@
 name: update-time
 
+# Trigger the workflow on the following events:
 on:
+  # Trigger on push events to the 'main' branch.
   push:
     branches:
       - main
+  
+  # Trigger every 30 minutes based on cron schedule.
   schedule:
-    - cron: "1 * * * *"
+    - cron: "*/30 * * * *"  # This runs every 30 minutes.
 
 jobs:
+  # Define the job that will run on an Ubuntu machine.
   auto_commit:
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Checkout the repository to make changes.
       - uses: actions/checkout@v3      
         with:
-         persist-credentials: false
-         fetch-depth: 0
+          persist-credentials: false  # Avoid storing credentials permanently.
+          fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
+
+      # Step 2: Set date and time variables.
       - name: Set date and time variables
         run: |
+          # Get the current date in 'YYYY-MM-DD' format.
           current_date=$(date +'%Y-%m-%d')
+          # Get the current military time (24-hour format).
           military_time=$(date +'%H:%M:%S')
+          # Get the current time in 12-hour format with AM/PM.
           normal_time=$(date +'%I:%M:%S %p')
+          # Get the current UTC time.
           utc_time=$(date -u +'%H:%M:%S UTC')  # Get UTC time
+          
+          # Set these variables for use in later steps.
           echo "DATE=$current_date" >> $GITHUB_ENV
           echo "MILITARY_TIME=$military_time" >> $GITHUB_ENV
           echo "NORMAL_TIME=$normal_time" >> $GITHUB_ENV
-          echo "UTC_TIME=$utc_time" >> $GITHUB_ENV  # Set UTC time in the environment
+          echo "UTC_TIME=$utc_time" >> $GITHUB_ENV  # Set UTC time in the environment.
+
+      # Step 3: Create a JSON file with the time data and save it to time.json.
       - name: Write JSON into time.json
         run: |
           echo "{
@@ -32,14 +49,19 @@ jobs:
             \"MilitaryTime\": \"$MILITARY_TIME\",
             \"NormalTime\": \"$NORMAL_TIME\",
             \"UTC\": \"$UTC_TIME\"
-          }" | jq . > time.json
+          }" | jq . > time.json  # Use jq to format and save to time.json.
+
+      # Step 4: Commit the changes (time.json) to the repository.
       - name: Commit
         run: |          
-          git config --local user.email "RunarokHrafn@gmail.com"
-          git config --local user.name "Runarok"
-          git add -A
-          git commit -m "$DATE ($UTC_TIME)"  # Add UTC time to commit message
+          git config --local user.email "RunarokHrafn@gmail.com"  # Set commit email.
+          git config --local user.name "Runarok"  # Set commit author name.
+          git add -A  # Stage all changes for commit.
+          # Create a commit message with the date and UTC time.
+          git commit -m "$DATE ($UTC_TIME)"  # Add UTC time to commit message.
+
+      # Step 5: Push the commit to the remote repository.
       - name: Push
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@master  # Use this action to push the changes.
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
