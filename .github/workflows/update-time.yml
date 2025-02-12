@@ -1,11 +1,12 @@
-name: Auto commit
+name: update-time
 
 on:
   push:
     branches:
-      - master
+      - main
   schedule:
-  - cron: "1 * * * *"
+    - cron: "1 * * * *"
+
 jobs:
   auto_commit:
     runs-on: ubuntu-latest
@@ -14,20 +15,24 @@ jobs:
         with:
          persist-credentials: false
          fetch-depth: 0
-      - name: Set date variable
+      - name: Set date and time variables
         run: |
-          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-      - name: Write into CURRENT_DATE
+          current_date=$(date +'%Y-%m-%d')
+          military_time=$(date +'%H:%M:%S')
+          normal_time=$(date +'%I:%M:%S %p')
+          echo "DATE=$current_date" >> $GITHUB_ENV
+          echo "MILITARY_TIME=$military_time" >> $GITHUB_ENV
+          echo "NORMAL_TIME=$normal_time" >> $GITHUB_ENV
+      - name: Write JSON into time.json
         run: |
-          echo $date > CURRENT_DATE
+          echo "{\"Date\":\"$DATE\", \"MilitaryTime\":\"$MILITARY_TIME\", \"NormalTime\":\"$NORMAL_TIME\"}" > time.json
       - name: Commit
         run: |          
           git config --local user.email "RunarokHrafn@gmail.com"
           git config --local user.name "Runarok"
           git add -A
-          git commit -m "commit of $date"
+          git commit -m "commit of $DATE"
       - name: Push
         uses: ad-m/github-push-action@master
         with:
-          directory: "."
           github_token: ${{ secrets.GITHUB_TOKEN }}
