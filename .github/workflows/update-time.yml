@@ -1,38 +1,48 @@
-name: Update Time
+name: Auto commit
 
 on:
+  push:
+    branches:
+      - Main
   schedule:
-    - cron: '0 * * * *'  # Runs at the top of every hour (00:00, 01:00, ..., 23:00) UTC
-  workflow_dispatch: # Allows you to trigger the workflow manually
+    - cron: "0 * * * *"  # Runs at the top of every hour (UTC)
+  workflow_dispatch: # Allows you to manually trigger the workflow
 
 jobs:
-  update-time:
+  auto_commit:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
 
-    - name: Get current time
-      id: current_time
-      run: |
-        # Get current time in military format (HHMM)
-        MILITARY_TIME=$(date +'%H%M')
-        # Get current time in normal format (hh:mm AM/PM)
-        NORMAL_TIME=$(date +'%I:%M %p')
-        echo "military_time=${MILITARY_TIME}" >> $GITHUB_ENV
-        echo "normal_time=${NORMAL_TIME}" >> $GITHUB_ENV
+      - name: Set time variables
+        run: |
+          # Get current time in military format (HHMM)
+          MILITARY_TIME=$(date +'%H%M')
+          # Get current time in normal format (hh:mm AM/PM)
+          NORMAL_TIME=$(date +'%I:%M %p')
+          
+          # Save the values to GitHub Environment
+          echo "military_time=${MILITARY_TIME}" >> $GITHUB_ENV
+          echo "normal_time=${NORMAL_TIME}" >> $GITHUB_ENV
 
-    - name: Update Time.md with current time
-      run: |
-        # Add the new times to Time.md
-        echo "Military Time: ${{ env.military_time }}" > Time.md
-        echo "Normal Time: ${{ env.normal_time }}" >> Time.md
+      - name: Write into Time.md
+        run: |
+          # Create or update Time.md with the current times
+          echo "Military Time: ${{ env.military_time }}" > Time.md
+          echo "Normal Time: ${{ env.normal_time }}" >> Time.md
 
-    - name: Commit updated Time.md
-      run: |
-        git config --global user.name 'Runarok'
-        git config --local user.email "RunarokHrafn@gmail.com" 
-        git add Time.md
-        git commit -m "Update Time.md with new time"
-        git push
+      - name: Commit updated Time.md
+        run: |
+          git config --local user.email "${{ secrets.EMAIL }}"
+          git config --local user.name "Runarok"
+          git add Time.md
+          git commit -m "Time Update with ${{ env.military_time }}"  # Commit message with the military time
+
+      - name: Push
+        uses: ad-m/github-push-action@master
+        with:
+          directory: "."
+          github_token: ${{ secrets.GITHUB_TOKEN }}
