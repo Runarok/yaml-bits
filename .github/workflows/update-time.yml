@@ -3,7 +3,7 @@ name: Auto commit
 on:
   push:
     branches:
-      - Main
+      - Time
   schedule:
     - cron: "0 * * * *"  # Runs at the top of every hour (UTC)
   workflow_dispatch: # Allows you to manually trigger the workflow
