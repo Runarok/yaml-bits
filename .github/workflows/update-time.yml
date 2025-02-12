@@ -1,0 +1,38 @@
+name: Update Time
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs at the top of every hour (00:00, 01:00, ..., 23:00) UTC
+  workflow_dispatch: # Allows you to trigger the workflow manually
+
+jobs:
+  update-time:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Get current time
+      id: current_time
+      run: |
+        # Get current time in military format (HHMM)
+        MILITARY_TIME=$(date +'%H%M')
+        # Get current time in normal format (hh:mm AM/PM)
+        NORMAL_TIME=$(date +'%I:%M %p')
+        echo "military_time=${MILITARY_TIME}" >> $GITHUB_ENV
+        echo "normal_time=${NORMAL_TIME}" >> $GITHUB_ENV
+
+    - name: Update Time.md with current time
+      run: |
+        # Add the new times to Time.md
+        echo "Military Time: ${{ env.military_time }}" > Time.md
+        echo "Normal Time: ${{ env.normal_time }}" >> Time.md
+
+    - name: Commit updated Time.md
+      run: |
+        git config --global user.name 'Runarok'
+        git config --local user.email "RunarokHrafn@gmail.com" 
+        git add Time.md
+        git commit -m "Update Time.md with new time"
+        git push
