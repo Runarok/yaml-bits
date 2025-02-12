@@ -10,7 +10,7 @@ on:
   # Trigger every 30 minutes based on cron schedule.
   schedule:
     - cron: "*/30 * * * *"  # This runs every 30 minutes.
-
+    
 jobs:
   # Define the job that will run on an Ubuntu machine.
   auto_commit:
