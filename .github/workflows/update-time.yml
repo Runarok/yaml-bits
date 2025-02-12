@@ -36,7 +36,7 @@ jobs:
 
       - name: Commit updated Time.md
         run: |
-          git config --local user.email "${{ secrets.EMAIL }}"
+          git config --local user.email "RunarokHrafn@gmail.com"
           git config --local user.name "Runarok"
           git add Time.md
           git commit -m "Time Update with ${{ env.military_time }}"  # Commit message with the military time
