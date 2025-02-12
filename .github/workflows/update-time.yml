@@ -20,18 +20,20 @@ jobs:
           current_date=$(date +'%Y-%m-%d')
           military_time=$(date +'%H:%M:%S')
           normal_time=$(date +'%I:%M:%S %p')
+          utc_time=$(date -u +'%H:%M:%S UTC')  # Get UTC time
           echo "DATE=$current_date" >> $GITHUB_ENV
           echo "MILITARY_TIME=$military_time" >> $GITHUB_ENV
           echo "NORMAL_TIME=$normal_time" >> $GITHUB_ENV
+          echo "UTC_TIME=$utc_time" >> $GITHUB_ENV  # Set UTC time in the environment
       - name: Write JSON into time.json
         run: |
-          echo "{\"Date\":\"$DATE\", \"MilitaryTime\":\"$MILITARY_TIME\", \"NormalTime\":\"$NORMAL_TIME\"}" > time.json
+          echo "{\"Date\":\"$DATE\", \"MilitaryTime\":\"$MILITARY_TIME\", \"NormalTime\":\"$NORMAL_TIME\", \"UTC\":\"$UTC_TIME\"}" > time.json
       - name: Commit
         run: |          
           git config --local user.email "RunarokHrafn@gmail.com"
           git config --local user.name "Runarok"
           git add -A
-          git commit -m "commit of $DATE"
+          git commit -m "commit of $DATE (UTC $UTC_TIME)"  # Add UTC time to commit message
       - name: Push
         uses: ad-m/github-push-action@master
         with:
