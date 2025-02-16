@@ -16,7 +16,7 @@ jobs:
           git config --global user.name "Runarok"  # Your name
           git config --global user.email "RunarokHrafn@gmail.com"  # Your email
 
-      # Step 2: Checkout repository to the empty state
+      # Step 2: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2  # Checkout the repository.
         with:
@@ -32,7 +32,7 @@ jobs:
             git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a unique message.
           done
 
-      # Step 4: Pull latest changes to ensure branch is up to date
+      # Step 4: Pull the latest changes from the remote branch (to avoid "behind" error)
       - name: Pull latest changes from remote
         run: |
           git pull origin Empty-commits || echo "No changes to pull"  # Pull changes from the remote Empty-commits branch.
