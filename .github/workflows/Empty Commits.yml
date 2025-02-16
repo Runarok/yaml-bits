@@ -28,7 +28,7 @@ jobs:
           git config --global user.email "RunarokHrafn@gmail.com"  # Set commit email.
           git config --global user.name "Runarok"  # Set commit author name.
 
-      # Step 3: Pull the latest changes from the remote repository.
+      # Step 3: Pull the latest changes from the remote repository to avoid reference lock.
       - name: Pull latest changes
         run: git pull origin main  # Pull the latest changes from the 'main' branch.
 
@@ -52,7 +52,11 @@ jobs:
           git add -A  # Stage changes (file deletion).
           git commit -m "Delete Empty.Readme after 100 commits"  # Commit file deletion.
 
-      # Step 6: Push the commits to the remote repository.
+      # Step 6: Pull the latest changes again to ensure no reference lock issues before pushing.
+      - name: Pull latest changes before push
+        run: git pull origin main  # Pull again to ensure there are no conflicts or locks.
+
+      # Step 7: Push the commits to the remote repository.
       - name: Push changes to remote
         uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
         with:
