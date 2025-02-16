@@ -16,39 +16,30 @@ jobs:
           git config --global user.name "Runarok"  # Your name
           git config --global user.email "RunarokHrafn@gmail.com"  # Your email
 
-      # Step 2: Checkout repository
+      # Step 2: Checkout the repository to make changes
       - name: Checkout repository
         uses: actions/checkout@v2  # Checkout the repository.
         with:
           persist-credentials: false  # Avoid storing credentials permanently.
           fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
 
-      # Step 3: Create a new branch and make 100 empty commits
-      - name: Create empty commits on a new branch
+      # Step 3: Create a new branch (optional) and make 100 empty commits
+      - name: Create empty commits
         run: |
-          git checkout --orphan Empty-commits  # Create a new branch without history.
-          git rm -rf .  # Ensure all files are removed before making empty commits.
+          git checkout -b Empty-commits  # Create and checkout a new branch 'Empty-commits'.
           for i in $(seq 1 100); do
             git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a unique message.
           done
 
-      # Step 4: Ensure no files are left in the branch before deleting
+      # Step 4: Remove all files after 100 empty commits
       - name: Remove all files after 100 empty commits
         run: |
-          # Only run git rm if there are any files left in the working directory
-          if [ -n "$(git ls-files)" ]; then
-            git rm -rf .  # Remove all files if any remain
-            git commit -m "Remove all files after 100 empty commits"  # Commit the file removals.
-          fi
+          git rm -rf .  # Remove all files in the current directory.
+          git commit -m "Remove all files after 100 empty commits"  # Commit the file removal.
 
-      # Step 5: Pull the latest changes from the remote branch (to avoid "behind" error)
-      - name: Pull latest changes from remote
-        run: |
-          git pull origin Empty-commits || echo "No changes to pull"  # Pull changes from the remote Empty-commits branch.
-
-      # Step 6: Push commits to the remote repository with GitHub token for authentication
+      # Step 5: Push commits to the remote repository with GitHub token for authentication
       - name: Push commits
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token for authentication.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token for authentication.
         run: |
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git Empty-commits
