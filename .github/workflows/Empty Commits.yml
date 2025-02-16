@@ -1,9 +1,14 @@
 name: Push 100 Empty Commits
 
+# Trigger the workflow on the following events:
 on:
+  # Trigger on push events to the 'main' branch.
   push:
     branches:
-      - main  # Trigger the workflow on pushes to the 'main' branch.
+      - main  # Trigger on pushes to the 'main' branch.
+  
+  # Add manual dispatch option
+  workflow_dispatch:  # This allows the workflow to be manually triggered.
 
 jobs:
   empty-commits:
