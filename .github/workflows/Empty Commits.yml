@@ -13,8 +13,8 @@ jobs:
       # Step 1: Set up Git user with your details
       - name: Set up Git user
         run: |
-          git config --global user.name "Runarok" 
-          git config --global user.email "RunarokHrafn@gmail.com" 
+          git config --global user.name "Runarok"  # Your name
+          git config --global user.email "RunarokHrafn@gmail.com"  # Your email
 
       # Step 2: Checkout the repository to make changes
       - name: Checkout repository
@@ -31,7 +31,9 @@ jobs:
             git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a unique message.
           done
 
-      # Step 4: Push commits to the remote repository
+      # Step 4: Push commits to the remote repository with GitHub token for authentication
       - name: Push commits
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token for authentication.
         run: |
-          git push origin Empty-commits  # Push the 'Empty-commits' branch to the remote repository.
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git Empty-commits
