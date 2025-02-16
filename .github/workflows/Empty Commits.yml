@@ -1,24 +1,35 @@
-name: Push Empty Commits to Empty-commits Branch
+name: Push 100 Empty Commits
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the workflow on pushes to the 'main' branch.
 
 jobs:
   empty-commits:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner.
 
-      - name: Create new branch and make 100 empty commits
+    steps:
+      # Step 1: Checkout the repository to make changes.
+      - name: Checkout code
+        uses: actions/checkout@v3  # Checkout the repository.
+        with:
+          persist-credentials: false  # Avoid storing credentials permanently.
+          fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
+
+      # Step 2: Create a new branch (optional).
+      - name: Create a new branch
         run: |
-          git checkout -b Empty-commits  # Create and checkout the new branch
+          git checkout -b Empty-commits  # Create and checkout a new branch 'Empty-commits'.
+
+      # Step 3: Create 100 empty commits.
+      - name: Create 100 empty commits
+        run: |
           for i in $(seq 1 100); do
-            git commit --allow-empty -m "Empty commit #$i"
+            git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a message.
           done
 
-      - name: Push commits to Empty-commits branch
+      # Step 4: Push commits to the remote repository with authentication.
+      - name: Push commits
         run: |
-          git push origin Empty-commits  # Push the new branch with empty commits
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} Empty-commits  # Push the changes with token-based authentication.
