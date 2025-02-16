@@ -1,4 +1,4 @@
-name: Push 100 Empty Commits
+name: Push 100 Empty Commits  # Name of the workflow
 
 on:
   push:
@@ -11,22 +11,28 @@ on:
   workflow_dispatch:  # This allows the workflow to be manually triggered.
 
 jobs:
-  # Define the job that will run on an Ubuntu machine.
-  auto_commit:
+  push_100_empty_commits:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner.
 
     steps:
       # Step 1: Checkout the repository to make changes.
-      - uses: actions/checkout@v3  # Checkout the repository.
+      - name: Checkout repository
+        uses: actions/checkout@v3  # Checkout the repository.
         with:
           persist-credentials: false  # Avoid storing credentials permanently.
           fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
 
-      # Step 2: Pull the latest changes from the remote repository.
+      # Step 2: Configure Git identity
+      - name: Configure Git identity
+        run: |
+          git config --global user.email "RunarokHrafn@gmail.com"  # Set commit email.
+          git config --global user.name "Runarok"  # Set commit author name.
+
+      # Step 3: Pull the latest changes from the remote repository.
       - name: Pull latest changes
         run: git pull origin main  # Pull the latest changes from the 'main' branch.
 
-      # Step 3: Create Empty.Readme file and add empty commits.
+      # Step 4: Create Empty.Readme file and commit 100 times
       - name: Create Empty.Readme and commit 100 times
         run: |
           # Create an empty README file.
@@ -39,14 +45,14 @@ jobs:
             git commit -m "Empty commit #$i"  # Commit with a unique message.
           done
 
-      # Step 4: Delete the Empty.Readme file after committing.
+      # Step 5: Delete the Empty.Readme file after committing.
       - name: Delete Empty.Readme
         run: |
           rm -f Empty.Readme  # Delete the Empty.Readme file.
           git add -A  # Stage changes (file deletion).
           git commit -m "Delete Empty.Readme after 100 commits"  # Commit file deletion.
 
-      # Step 5: Push the commits to the remote repository.
+      # Step 6: Push the commits to the remote repository.
       - name: Push changes to remote
         uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
         with:
