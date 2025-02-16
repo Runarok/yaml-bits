@@ -23,7 +23,12 @@ jobs:
           persist-credentials: false  # Avoid storing credentials permanently.
           fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
 
-      # Step 3: Create a new branch (optional) and make 100 empty commits
+      # Step 3: Pull latest changes from the remote repository
+      - name: Pull latest changes
+        run: |
+          git pull origin main  # Ensure the local branch is up-to-date with the remote.
+
+      # Step 4: Create a new branch (optional) and make 100 empty commits
       - name: Create empty commits
         run: |
           git checkout -b Empty-commits  # Create and checkout a new branch 'Empty-commits'.
@@ -31,13 +36,13 @@ jobs:
             git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a unique message.
           done
 
-      # Step 4: Remove all files after 100 empty commits
+      # Step 5: Remove all files after 100 empty commits
       - name: Remove all files after 100 empty commits
         run: |
           git rm -rf .  # Remove all files in the current directory.
           git commit -m "Remove all files after 100 empty commits"  # Commit the file removal.
 
-      # Step 5: Push commits to the remote repository with GitHub token for authentication
+      # Step 6: Push commits to the remote repository with GitHub token for authentication
       - name: Push commits
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token for authentication.
