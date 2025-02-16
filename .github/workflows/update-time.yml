@@ -26,7 +26,11 @@ jobs:
           persist-credentials: false  # Avoid storing credentials permanently.
           fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
 
-      # Step 2: Set date and time variables.
+      # Step 2: Pull the latest changes from the remote repository.
+      - name: Pull latest changes
+        run: git pull origin main  # Pull the latest changes from the 'main' branch.
+
+      # Step 3: Set date and time variables.
       - name: Set date and time variables  # Define a step to set date and time variables.
         run: |
           # Get the current date in 'YYYY-MM-DD' format.
@@ -44,7 +48,7 @@ jobs:
           echo "NORMAL_TIME=$normal_time" >> $GITHUB_ENV  # Set the normal time.
           echo "UTC_TIME=$utc_time" >> $GITHUB_ENV  # Set UTC time.
 
-      # Step 3: Create a JSON file with the time data and save it to time.json.
+      # Step 4: Create a JSON file with the time data and save it to time.json.
       - name: Write JSON into time.json  # Define a step to write the time data into a JSON file.
         run: |
           echo "{
@@ -54,7 +58,7 @@ jobs:
             \"UTC\": \"$UTC_TIME\"
           }" | jq . > time.json  # Format and save the time data into time.json using jq.
 
-      # Step 4: Commit the changes (time.json) to the repository.
+      # Step 5: Commit the changes (time.json) to the repository.
       - name: Commit  # Define a step to commit the changes.
         run: |          
           git config --local user.email "RunarokHrafn@gmail.com"  # Set commit email.
@@ -63,7 +67,7 @@ jobs:
           # Create a commit message with the date and UTC time.
           git commit -m "$DATE ($UTC_TIME)"  # Commit with a message that includes the date and UTC time.
 
-      # Step 5: Push the commit to the remote repository.
+      # Step 6: Push the commit to the remote repository.
       - name: Push  # Define a step to push the commit to GitHub.
         uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
         with:
