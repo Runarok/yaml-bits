@@ -3,40 +3,51 @@ name: Push 100 Empty Commits
 on:
   push:
     branches:
-      - main  # Trigger the workflow on pushes to the 'main' branch.
+      - main  # Trigger on pushes to the 'main' branch.
+  
+  schedule:
+    - cron: "1 * * * *"  # This runs every hour.
 
-  # Add manual dispatch option
   workflow_dispatch:  # This allows the workflow to be manually triggered.
 
 jobs:
-  empty-commits:
+  # Define the job that will run on an Ubuntu machine.
+  auto_commit:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner.
 
     steps:
-      # Step 1: Set up Git user with your details
-      - name: Set up Git user
-        run: |
-          git config --global user.name "Runarok"  # Your name
-          git config --global user.email "RunarokHrafn@gmail.com"  # Your email
-
-      # Step 2: Checkout the repository to make changes
-      - name: Checkout repository
-        uses: actions/checkout@v2  # Checkout the repository.
+      # Step 1: Checkout the repository to make changes.
+      - uses: actions/checkout@v3  # Checkout the repository.
         with:
           persist-credentials: false  # Avoid storing credentials permanently.
           fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
 
-      # Step 3: Create a new branch (optional) and make 100 empty commits
-      - name: Create empty commits
+      # Step 2: Pull the latest changes from the remote repository.
+      - name: Pull latest changes
+        run: git pull origin main  # Pull the latest changes from the 'main' branch.
+
+      # Step 3: Create Empty.Readme file and add empty commits.
+      - name: Create Empty.Readme and commit 100 times
         run: |
-          git checkout -b Empty-commits  # Create and checkout a new branch 'Empty-commits'.
-          for i in $(seq 1 100); do
-            git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a unique message.
+          # Create an empty README file.
+          touch Empty.Readme
+          
+          # Loop to make 100 empty commits with commit number in the file.
+          for i in {1..100}; do
+            echo "Commit number: $i" >> Empty.Readme  # Append commit number to file.
+            git add Empty.Readme  # Stage the file for commit.
+            git commit -m "Empty commit #$i"  # Commit with a unique message.
           done
 
-      # Step 4: Push commits to the remote repository with GitHub token for authentication
-      - name: Push commits
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token for authentication.
+      # Step 4: Delete the Empty.Readme file after committing.
+      - name: Delete Empty.Readme
         run: |
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git Empty-commits
+          rm -f Empty.Readme  # Delete the Empty.Readme file.
+          git add -A  # Stage changes (file deletion).
+          git commit -m "Delete Empty.Readme after 100 commits"  # Commit file deletion.
+
+      # Step 5: Push the commits to the remote repository.
+      - name: Push changes to remote
+        uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
