@@ -27,16 +27,19 @@ jobs:
       - name: Create empty commits on a new branch
         run: |
           git checkout --orphan Empty-commits  # Create a new branch without history.
-          git rm -rf .  # Remove all files from the working directory to avoid accidental commits.
+          git rm -rf .  # Ensure all files are removed before making empty commits.
           for i in $(seq 1 100); do
             git commit --allow-empty -m "Empty commit #$i"  # Create an empty commit with a unique message.
           done
 
-      # Step 4: Remove all files in the branch (after 100 empty commits)
-      - name: Delete all files in the branch
+      # Step 4: Ensure no files are left in the branch before deleting
+      - name: Remove all files after 100 empty commits
         run: |
-          git rm -rf .  # Remove all files from the working directory.
-          git commit -m "Remove all files after 100 empty commits"  # Commit the file removals.
+          # Only run git rm if there are any files left in the working directory
+          if [ -n "$(git ls-files)" ]; then
+            git rm -rf .  # Remove all files if any remain
+            git commit -m "Remove all files after 100 empty commits"  # Commit the file removals.
+          fi
 
       # Step 5: Pull the latest changes from the remote branch (to avoid "behind" error)
       - name: Pull latest changes from remote
