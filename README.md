@@ -11,3 +11,5 @@ Instead of spamming commits, I decided to create a version that updates the comm
 **Note:** The update might not be exactly at UTC :00 due to server load.
 
 > Finalized the YAML/action as of 12th February 2025. Proper auto-updating started as of 15:00 PM UTC.
+
+[![Push 100 Empty Commits](https://github.com/Runarok/Auto-Commiter/actions/workflows/Empty%20Commits.yml/badge.svg)](https://github.com/Runarok/Auto-Commiter/actions/workflows/Empty%20Commits.yml)
