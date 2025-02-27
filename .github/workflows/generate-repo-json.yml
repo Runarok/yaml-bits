@@ -1,0 +1,81 @@
+name: Generate Repositories JSON
+
+on:
+  push:
+    branches:
+      - main  # Or whichever branch you want to trigger on
+  workflow_dispatch: # You can also trigger manually from GitHub UI
+
+jobs:
+  generate-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Fetch repositories from GitHub API
+        run: |
+          # Define the GitHub username
+          USERNAME="RUNAROK"
+          
+          # Get the list of repositories
+          RESPONSE=$(curl -s "https://api.github.com/users/$USERNAME/repos?per_page=100")
+
+          # Prepare the JSON data with categorized repositories
+          recent_repos="[]"
+          archived_repos="[]"
+          unarchived_repos="[]"
+
+          # Current date in YYYY-MM-DD format
+          CURRENT_DATE=$(date +%Y-%m-%d)
+
+          # Loop through repositories and categorize them
+          for repo in $(echo "$RESPONSE" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${repo} | base64 --decode | jq -r ${1}
+            }
+
+            REPO_NAME=$(_jq '.name')
+            REPO_DESCRIPTION=$(_jq '.description')
+            REPO_CREATED_AT=$(_jq '.created_at')
+            REPO_UPDATED_AT=$(_jq '.updated_at')
+            REPO_ARCHIVED=$(_jq '.archived')
+            REPO_URL=$(_jq '.html_url')
+
+            # Define date threshold for "recent" (e.g., within 1 year)
+            RECENT_THRESHOLD=$(date -d "-1 year" +%Y-%m-%d)
+
+            # Categorize repositories based on update time and archived status
+            if [ "$REPO_ARCHIVED" == "true" ]; then
+              archived_repos=$(echo "$archived_repos" | jq --arg name "$REPO_NAME" --arg description "$REPO_DESCRIPTION" --arg created_at "$REPO_CREATED_AT" --arg updated_at "$REPO_UPDATED_AT" --arg url "$REPO_URL" '. + [{"name": $name, "description": $description, "created_at": $created_at, "updated_at": $updated_at, "url": $url}]')
+            elif [[ "$REPO_UPDATED_AT" > "$RECENT_THRESHOLD"* ]]; then
+              recent_repos=$(echo "$recent_repos" | jq --arg name "$REPO_NAME" --arg description "$REPO_DESCRIPTION" --arg created_at "$REPO_CREATED_AT" --arg updated_at "$REPO_UPDATED_AT" --arg url "$REPO_URL" '. + [{"name": $name, "description": $description, "created_at": $created_at, "updated_at": $updated_at, "url": $url}]')
+            else
+              unarchived_repos=$(echo "$unarchived_repos" | jq --arg name "$REPO_NAME" --arg description "$REPO_DESCRIPTION" --arg created_at "$REPO_CREATED_AT" --arg updated_at "$REPO_UPDATED_AT" --arg url "$REPO_URL" '. + [{"name": $name, "description": $description, "created_at": $created_at, "updated_at": $updated_at, "url": $url}]')
+            fi
+          done
+
+          # Create the final JSON object
+          FINAL_JSON=$(jq -n \
+            --argjson recent "$recent_repos" \
+            --argjson archived "$archived_repos" \
+            --argjson unarchived "$unarchived_repos" \
+            '{
+              "repositories": {
+                "recent": $recent,
+                "archived": $archived,
+                "unarchived": $unarchived
+              }
+            }')
+
+          # Write the JSON to a file
+          echo "$FINAL_JSON" > repositories.json
+
+      - name: Commit and push JSON to the repository
+        uses: EndBug/add-and-commit@v7
+        with:
+          author_name: 'GitHub Actions'
+          author_email: 'actions@github.com'
+          message: 'Generated repositories JSON'
+          add: 'repositories.json'
