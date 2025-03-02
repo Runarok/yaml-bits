@@ -1,0 +1,65 @@
+{
+  "repositories": {
+    "recent": [
+      {
+        "name": "Auto-Commiter",
+        "description": "null",
+        "created_at": "2025-02-12T13:27:52Z",
+        "updated_at": "2025-03-02T11:40:47Z",
+        "url": "https://github.com/Runarok/Auto-Commiter"
+      },
+      {
+        "name": "LeetSolutions",
+        "description": "null",
+        "created_at": "2025-01-16T04:55:43Z",
+        "updated_at": "2025-03-02T03:53:42Z",
+        "url": "https://github.com/Runarok/LeetSolutions"
+      },
+      {
+        "name": "Runarok",
+        "description": "null",
+        "created_at": "2025-02-08T07:58:19Z",
+        "updated_at": "2025-03-01T23:24:51Z",
+        "url": "https://github.com/Runarok/Runarok"
+      },
+      {
+        "name": "GeeksForGeeks-solutions",
+        "description": "null",
+        "created_at": "2025-01-14T04:19:36Z",
+        "updated_at": "2025-03-01T22:20:32Z",
+        "url": "https://github.com/Runarok/GeeksForGeeks-solutions"
+      },
+      {
+        "name": "ArbitraryWorks",
+        "description": "A collection of diverse and spontaneous projects, each crafted without a fixed direction or theme. The repository serves as a playground for exploring different ideas, experiments, and unexpected creations—an archive of arbitrary inspiration and creativity.",
+        "created_at": "2025-02-25T13:27:01Z",
+        "updated_at": "2025-03-01T01:45:16Z",
+        "url": "https://github.com/Runarok/ArbitraryWorks"
+      }
+    ],
+    "archived": [
+      {
+        "name": "GenAI",
+        "description": "Explore AI-assisted games and projects, created and refined during the 5th semester of university. From unbeatable Tic-Tac-Toe to maze adventures, enjoy fun and challenging experiences!",
+        "created_at": "2024-12-10T11:34:32Z",
+        "updated_at": "2025-02-25T14:26:03Z",
+        "url": "https://github.com/Runarok/GenAI"
+      },
+      {
+        "name": "Design-and-implementation-of-Antenna",
+        "description": "This project provides a simple and well-documented MATLAB implementation of a Phase-Locked Loop (PLL), developed as part of a 5th semester mini project. The final version focuses on clarity, structure, and ease of understanding.",
+        "created_at": "2024-12-10T07:05:16Z",
+        "updated_at": "2025-02-25T13:58:52Z",
+        "url": "https://github.com/Runarok/Design-and-implementation-of-Antenna"
+      },
+      {
+        "name": "url-redir",
+        "description": "This repository provides a customizable URL redirector hosted on GitHub Pages. It redirects users based on URL fragments, with options for a confirmation popup and bulk URL handling. The rules are defined in a JSON file, and the project features a responsive, dark-themed UI with toast notifications.",
+        "created_at": "2024-12-11T01:48:56Z",
+        "updated_at": "2025-02-25T13:46:33Z",
+        "url": "https://github.com/Runarok/url-redir"
+      }
+    ],
+    "unarchived": []
+  }
+}
