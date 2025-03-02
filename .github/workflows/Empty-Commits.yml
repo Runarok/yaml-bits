@@ -5,10 +5,9 @@ on:
     branches:
       - main  # Trigger on pushes to the 'main' branch.
   
- schedule:
-   - cron: "0 0 1 1 *"  # This runs every hour.
+  schedule:
+    - cron: "0 0 1 1 *"  # This runs every hour.
 
-  # Add manual dispatch option
   workflow_dispatch:  # This allows the workflow to be manually triggered.
 
 jobs:
@@ -39,8 +38,8 @@ jobs:
           # Create an empty README file.
           touch Empty.Readme
           
-          # Loop to make 200 empty commits with commit number in the file.
-          for i in {1..200}; do
+          # Loop to make 100 empty commits with commit number in the file.
+          for i in {1..100}; do
             echo "Commit number: $i" >> Empty.Readme  # Append commit number to file.
             git add Empty.Readme  # Stage the file for commit.
             git commit -m "Empty commit #$i"  # Commit with a unique message.
