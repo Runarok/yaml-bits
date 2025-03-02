@@ -1,5 +1,7 @@
 # Auto-Committer
 
+
+```yml
 name: Push 100 Empty Commits  # Name of the workflow
 
 on:
@@ -63,9 +65,9 @@ jobs:
         uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
+```
 
-
-
+```yml
 name: update-time  # Name of the workflow
 
 # Trigger the workflow on the following events:
@@ -136,6 +138,6 @@ jobs:
         uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
-
+```
           
           
