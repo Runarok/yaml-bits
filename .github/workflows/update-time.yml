@@ -1,97 +1,67 @@
-name: Generate Repositories JSON
+name: update-time  # Name of the workflow
 
+# Trigger the workflow on the following events:
 on:
+  # Trigger on push events to the 'main' branch.
   push:
     branches:
-      - main  # Trigger the workflow when there are pushes to the main branch
-  workflow_dispatch:  # Allow the workflow to be manually triggered
-
+      - main  # Trigger on pushes to the 'main' branch.
+  
+  # Trigger every hour based on cron schedule.
+  schedule:
+    - cron: "1 * * * *"  # This runs every hour.
+    
 jobs:
-  generate-json:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu environment to run the job
+  # Define the job that will run on an Ubuntu machine.
+  auto_commit:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner.
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout Repository
-        uses: actions/checkout@v3  # This step checks out the repository code so we can work with it.
+      # Step 1: Checkout the repository to make changes.
+      - uses: actions/checkout@v3  # Checkout the repository.
+        with:
+          persist-credentials: false  # Avoid storing credentials permanently.
+          fetch-depth: 0  # Fetch the full history to avoid issues with git operations.
 
-      # Step 2: Fetch repositories from GitHub API and categorize them
-      - name: Fetch Repositories and Categorize
+      # Step 2: Set date and time variables.
+      - name: Set date and time variables  # Define a step to set date and time variables.
         run: |
-          # Define the GitHub username (your GitHub username)
-          USERNAME="RUNAROK"
+          # Get the current date in 'YYYY-MM-DD' format.
+          current_date=$(date +'%Y-%m-%d')  # Format the current date.
+          # Get the current military time (24-hour format).
+          military_time=$(date +'%H:%M:%S')  # Format the time in 24-hour format.
+          # Get the current time in 12-hour format with AM/PM.
+          normal_time=$(date +'%I:%M:%S %p')  # Format time in 12-hour format.
+          # Get the current UTC time.
+          utc_time=$(date -u +'%H:%M:%S UTC')  # Get UTC time in 24-hour format.
           
-          # Fetch the repositories list from GitHub API
-          RESPONSE=$(curl -s "https://api.github.com/users/$USERNAME/repos?per_page=100&sort=updated")
+          # Set these variables for use in later steps.
+          echo "DATE=$current_date" >> $GITHUB_ENV  # Set the current date as a GitHub environment variable.
+          echo "MILITARY_TIME=$military_time" >> $GITHUB_ENV  # Set the military time.
+          echo "NORMAL_TIME=$normal_time" >> $GITHUB_ENV  # Set the normal time.
+          echo "UTC_TIME=$utc_time" >> $GITHUB_ENV  # Set UTC time.
 
-          # Prepare the JSON arrays for categorized repositories
-          recent_repos="[]"
-          archived_repos="[]"
-          unarchived_repos="[]"
+      # Step 3: Create a JSON file with the time data and save it to time.json.
+      - name: Write JSON into time.json  # Define a step to write the time data into a JSON file.
+        run: |
+          echo "{
+            \"Date\": \"$DATE\",
+            \"MilitaryTime\": \"$MILITARY_TIME\",
+            \"NormalTime\": \"$NORMAL_TIME\",
+            \"UTC\": \"$UTC_TIME\"
+          }" | jq . > time.json  # Format and save the time data into time.json using jq.
 
-          # Get current date in YYYY-MM-DD format
-          CURRENT_DATE=$(date +%Y-%m-%d)
+      # Step 4: Commit the changes (time.json) to the repository.
+      - name: Commit  # Define a step to commit the changes.
+        run: |          
+          git config --local user.email "RunarokHrafn@gmail.com"  # Set commit email.
+          git config --local user.name "Runarok"  # Set commit author name.
+          git add -A  # Stage all changes for commit.
+          # Create a commit message with the date and UTC time.
+          git commit -m "$DATE ($UTC_TIME)"  # Commit with a message that includes the date and UTC time.
 
-          # Loop through repositories and categorize them
-          for repo in $(echo "$RESPONSE" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo ${repo} | base64 --decode | jq -r ${1}
-            }
-
-            # Extract repository details
-            REPO_NAME=$(_jq '.name')
-            REPO_DESCRIPTION=$(_jq '.description')
-            REPO_CREATED_AT=$(_jq '.created_at')
-            REPO_UPDATED_AT=$(_jq '.updated_at')
-            REPO_ARCHIVED=$(_jq '.archived')
-            REPO_URL=$(_jq '.html_url')
-
-            # Define a threshold for "recent" (repositories updated within the last 1 year)
-            RECENT_THRESHOLD=$(date -d "-1 year" +%Y-%m-%d)
-
-            # Categorize repositories based on their update time and archive status
-            if [ "$REPO_ARCHIVED" == "true" ]; then
-              # Add to "archived" category
-              archived_repos=$(echo "$archived_repos" | jq --arg name "$REPO_NAME" --arg description "$REPO_DESCRIPTION" --arg created_at "$REPO_CREATED_AT" --arg updated_at "$REPO_UPDATED_AT" --arg url "$REPO_URL" '. + [{"name": $name, "description": $description, "created_at": $created_at, "updated_at": $updated_at, "url": $url}]')
-            elif [[ "$REPO_UPDATED_AT" > "$RECENT_THRESHOLD"* ]]; then
-              # Add to "recent" category (only 5 recent repos will be kept)
-              recent_repos=$(echo "$recent_repos" | jq --arg name "$REPO_NAME" --arg description "$REPO_DESCRIPTION" --arg created_at "$REPO_CREATED_AT" --arg updated_at "$REPO_UPDATED_AT" --arg url "$REPO_URL" '. + [{"name": $name, "description": $description, "created_at": $created_at, "updated_at": $updated_at, "url": $url}]')
-            else
-              # Add to "unarchived" category
-              unarchived_repos=$(echo "$unarchived_repos" | jq --arg name "$REPO_NAME" --arg description "$REPO_DESCRIPTION" --arg created_at "$REPO_CREATED_AT" --arg updated_at "$REPO_UPDATED_AT" --arg url "$REPO_URL" '. + [{"name": $name, "description": $description, "created_at": $created_at, "updated_at": $updated_at, "url": $url}]')
-            fi
-          done
-
-          # Limit the "recent" category to only the 5 most recent repositories
-          recent_repos=$(echo "$recent_repos" | jq 'if length > 5 then .[0:5] else . end')
-
-          # Create the final JSON structure
-          FINAL_JSON=$(jq -n \
-            --argjson recent "$recent_repos" \
-            --argjson archived "$archived_repos" \
-            --argjson unarchived "$unarchived_repos" \
-            '{
-              "repositories": {
-                "recent": $recent,
-                "archived": $archived,
-                "unarchived": $unarchived
-              }
-            }')
-
-          # Save the final JSON to a file
-          echo "$FINAL_JSON" > repositories.json
-
-      # Step 3: Commit the generated JSON file as yourself (your GitHub username and email)
-      - name: Commit and Push Changes as Yourself
-        uses: EndBug/add-and-commit@v7  # Action to commit and push the file to the repository
+      # Step 5: Push the commit to the remote repository.
+      - name: Push  # Define a step to push the commit to GitHub.
+        uses: ad-m/github-push-action@master  # Use GitHub Push Action to push changes.
         with:
-          author_name: 'RUNAROK'  # Use your GitHub username for the commit
-          author_email: 'your-email@example.com'  # Use your GitHub email for the commit
-          message: 'Generated repositories JSON'  # Commit message
-          add: 'repositories.json'  # Specify the file to commit
-
-      # Step 4: Push the commit to GitHub
-      - name: Push Commit to GitHub
-        uses: ad-m/github-push-action@master  # Action to push the changes to GitHub
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}  # Authenticate using the GitHub token
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
