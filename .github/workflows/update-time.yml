@@ -10,7 +10,10 @@ on:
   # Trigger every hour based on cron schedule.
   schedule:
     - cron: "1 * * * *"  # This runs every hour.
-    
+
+      # Add manual dispatch option
+  workflow_dispatch:  # This allows the workflow to be manually triggered.
+
 jobs:
   # Define the job that will run on an Ubuntu machine.
   auto_commit:
