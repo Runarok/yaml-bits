@@ -8,6 +8,7 @@ on:
  schedule:
    - cron: "0 0 1 1 *"  # This runs every hour.
 
+  # Add manual dispatch option
   workflow_dispatch:  # This allows the workflow to be manually triggered.
 
 jobs:
