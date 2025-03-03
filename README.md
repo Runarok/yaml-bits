@@ -1,6 +1,8 @@
 # Auto-Committer
 
-
+<details>
+<summary>Push 100 Empty Commits</summary>
+  
 ```yml
 name: Push 100 Empty Commits  # Name of the workflow
 
@@ -66,6 +68,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
 ```
+</details>
+
+<details>
+<summary>update-time</summary>
 
 ```yml
 name: update-time  # Name of the workflow
@@ -140,4 +146,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token to authenticate the push.
 ```
           
-          
+</details>          
