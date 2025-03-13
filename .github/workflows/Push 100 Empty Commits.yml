@@ -39,7 +39,7 @@ jobs:
           touch Empty.Readme
           
           # Loop to create 100 empty commits, appending commit number to the README each time.
-          for i in {1..100}; do
+          for i in {1..250}; do
             echo "Commit number: $i" >> Empty.Readme  # Append the commit number to the README file.
             git add Empty.Readme  # Stage the changes for commit.
             git commit -m "Empty commit #$i"  # Create a commit with a message indicating the commit number.
