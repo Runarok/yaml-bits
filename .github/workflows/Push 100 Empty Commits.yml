@@ -6,7 +6,7 @@ on:
       - main  # Trigger this workflow when changes are pushed to the 'main' branch.
   
   schedule:
-    - cron: "0 */2 * * *"  # Schedule the workflow to run every 2 hours at the start of the hour (UTC).
+    - cron: "0 *1 * * *"  # Schedule the workflow to run every 1 hour at the start of the hour (UTC).
 
   workflow_dispatch:  # Allow the workflow to be manually triggered via GitHub Actions UI.
 
@@ -39,7 +39,7 @@ jobs:
           touch Empty.Readme
           
           # Loop to create 100 empty commits, appending commit number to the README each time.
-          for i in {1..250}; do
+          for i in {1..100}; do
             echo "Commit number: $i" >> Empty.Readme  # Append the commit number to the README file.
             git add Empty.Readme  # Stage the changes for commit.
             git commit -m "Empty commit #$i"  # Create a commit with a message indicating the commit number.
