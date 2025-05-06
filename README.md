@@ -3,7 +3,7 @@
 # Push 100 Empty Commits
 # update-time
 
-# Push 100 Empty Commits
+### Push 100 Empty Commits
   
 ```yml
 name: Push 100 Empty Commits  # Workflow name that describes the purpose
@@ -72,7 +72,7 @@ jobs:
 ```
 
 
-# update-time
+### update-time
 
 ```yml
 name: update-time  # Workflow name that describes its purpose.
