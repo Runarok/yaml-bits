@@ -1,4 +1,4 @@
-name: Push 100 Empty Commits  # Workflow name that describes the purpose
+name: Push 500 Empty Commits  # Workflow name that describes the purpose
 
 on:
   push:
@@ -38,8 +38,8 @@ jobs:
           # Create an empty README file.
           touch Empty.Readme
           
-          # Loop to create 100 empty commits, appending commit number to the README each time.
-          for i in {1..250}; do
+          # Loop to create 500 empty commits, appending commit number to the README each time.
+          for i in {1..500}; do
             echo "Commit number: $i" >> Empty.Readme  # Append the commit number to the README file.
             git add Empty.Readme  # Stage the changes for commit.
             git commit -m "Empty commit #$i"  # Create a commit with a message indicating the commit number.
