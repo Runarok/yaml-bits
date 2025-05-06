@@ -50,7 +50,7 @@ jobs:
         run: |
           rm -f Empty.Readme  # Delete the Empty.Readme file that was used for commits.
           git add -A  # Stage the deletion of the file.
-          git commit -m "Delete Empty.Readme after 100 commits"  # Commit the file deletion.
+          git commit -m "Delete Empty.Readme after #$i commits"  # Commit the file deletion.
 
       # Step 6: Pull latest changes again to ensure no conflicts before pushing
       - name: Pull latest changes before push
