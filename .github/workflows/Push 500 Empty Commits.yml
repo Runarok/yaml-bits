@@ -1,4 +1,4 @@
-name: Push 500 Empty Commits  # Workflow name that describes the purpose
+name: Push Empty Commits  # Workflow name that describes the purpose
 
 on:
   push:
@@ -11,8 +11,11 @@ on:
   workflow_dispatch:  # Allow the workflow to be manually triggered via GitHub Actions UI.
 
 jobs:
-  push_100_empty_commits:
+  push_empty_commits:
     runs-on: ubuntu-latest  # The job will run on the latest version of an Ubuntu runner.
+
+    env:
+      NUM_COMMITS: 500  # Set the number of commits you want here.
 
     steps:
       # Step 1: Checkout the repository to make changes
@@ -32,14 +35,14 @@ jobs:
       - name: Pull latest changes
         run: git pull origin main  # Pull the latest changes from the 'main' branch before starting work.
 
-      # Step 4: Create an empty README file and commit 100 times
-      - name: Create Empty.Readme and commit 100 times
+      # Step 4: Create an empty README file and commit multiple times
+      - name: Create Empty.Readme and commit multiple times
         run: |
           # Create an empty README file.
           touch Empty.Readme
           
-          # Loop to create 500 empty commits, appending commit number to the README each time.
-          for i in {1..500}; do
+          # Loop to create commits based on the NUM_COMMITS variable.
+          for i in $(seq 1 ${{ env.NUM_COMMITS }}); do
             echo "Commit number: $i" >> Empty.Readme  # Append the commit number to the README file.
             git add Empty.Readme  # Stage the changes for commit.
             git commit -m "Empty commit #$i"  # Create a commit with a message indicating the commit number.
@@ -50,7 +53,7 @@ jobs:
         run: |
           rm -f Empty.Readme  # Delete the Empty.Readme file that was used for commits.
           git add -A  # Stage the deletion of the file.
-          git commit -m "Delete Empty.Readme after #$i commits"  # Commit the file deletion.
+          git commit -m "Delete Empty.Readme after ${{ env.NUM_COMMITS }} commits"  # Commit the file deletion.
 
       # Step 6: Pull latest changes again to ensure no conflicts before pushing
       - name: Pull latest changes before push
