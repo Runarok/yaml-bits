@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest  # The job will run on the latest version of an Ubuntu runner.
 
     env:
-      NUM_COMMITS: 500  # Set the number of commits you want here.
+      NUM_COMMITS: 750  # Set the number of commits you want here.
 
     steps:
       # Step 1: Checkout the repository to make changes
