@@ -9,8 +9,8 @@ A collection of lightweight GitHub Actions for routine automation — stored in 
 <table>
   <thead>
     <tr>
-      <th align="left">Action</th>
-      <th align="left">Description</th>
+      <th align="center">Action</th>
+      <th align="center">Description</th>
     </tr>
   </thead>
   <tbody>
