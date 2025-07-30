@@ -1,10 +1,12 @@
-name: Safe PR Generator
+name: Create + Delete File PR
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"  # Every hour
 
 jobs:
-  create-merge-pr:
+  pr-file-create-delete:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,16 +21,24 @@ jobs:
           git config user.name "Runarok"
           git config user.email "RunarokHrafn@gmail.com"
 
-      - name: Create new branch and commit
-        id: create_branch
+      - name: Create new branch, file, delete it
+        id: branch_ops
         run: |
-          BRANCH="auto-pr-$(date +%s)"
-          echo "branch_name=$BRANCH" >> $GITHUB_OUTPUT
-          git checkout -b $BRANCH
-          echo "# PR created at $(date)" > generated.md
-          git add generated.md
-          git commit -m "Auto-generated file"
-          git push origin $BRANCH
+          BRANCH_NAME="auto-pr-$(date +%s)"
+          FILE_NAME="temp-${BRANCH_NAME}.txt"
+          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "file_name=${FILE_NAME}" >> $GITHUB_OUTPUT
+
+          git checkout -b $BRANCH_NAME
+
+          echo "This file will be deleted." > $FILE_NAME
+          git add $FILE_NAME
+          git commit -m "Add $FILE_NAME"
+
+          git rm $FILE_NAME
+          git commit -m "Delete $FILE_NAME"
+
+          git push origin $BRANCH_NAME
 
       - name: Create Pull Request
         id: pr
@@ -36,20 +46,18 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          head: ${{ steps.create_branch.outputs.branch_name }}
-          title: "Auto PR from ${{ steps.create_branch.outputs.branch_name }}"
-          body: "Auto PR body"
+          head: ${{ steps.branch_ops.outputs.branch_name }}
+          title: "Create and Delete File PR"
+          body: "Adds and deletes a file in the same PR."
 
       - name: Merge PR and Delete Branch
+        if: ${{ steps.pr.outputs.pull-request-number }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const prNumber = parseInt('${{ steps.pr.outputs.pull-request-number }}');
-            if (!prNumber) {
-              core.setFailed("No PR number found");
-              return;
-            }
+            core.info(`Merging PR #${prNumber}`);
 
             await github.pulls.merge({
               owner: context.repo.owner,
@@ -65,8 +73,13 @@ jobs:
             });
 
             const branch = pr.data.head.ref;
+            core.info(`Deleting branch ${branch}`);
+
             await github.git.deleteRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `heads/${branch}`,
             });
+
+      - name: Checkout back to main
+        run: git checkout main
