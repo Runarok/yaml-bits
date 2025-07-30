@@ -1,54 +1,76 @@
-name: Generate PRs with Empty Commits
+name: Auto Generate and Merge PRs
 
 on:
-  push:
-    branches:
-      - main
-
   schedule:
     - cron: "0 * * * *"  # Every hour
-
-  workflow_dispatch:  # Manual trigger support
+  workflow_dispatch:
 
 jobs:
-  generate_prs:
+  generate_pr:
     runs-on: ubuntu-latest
 
-    env:
-      NUM_PRS: 10  # Number of pull requests to generate per run
-
     steps:
-      - name: Checkout repository
+      - name: Checkout main branch
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: main
 
-      - name: Configure Git identity
+      - name: Configure Git
         run: |
-          git config --global user.email "RunarokHrafn@gmail.com"
-          git config --global user.name "Runarok"
+          git config user.name "Runarok"
+          git config user.email "RunarokHrafn@gmail.com"
 
-      - name: Loop to create PRs
+      - name: Create new branch and empty commit
+        id: create_branch
         run: |
-          for i in $(seq 1 $NUM_PRS); do
-            BRANCH="auto-pr-$(date +%s)-$i"
-            git checkout -b $BRANCH
-            git commit --allow-empty -m "Empty commit for PR #$i"
-            git push origin $BRANCH
+          BRANCH_NAME=auto-pr-$(date +%s)
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
-            # Create pull request using GitHub CLI
-            gh pr create \
-              --base main \
-              --head $BRANCH \
-              --title "Auto PR #$i" \
-              --body "This is an auto-generated pull request #$i"
+          git checkout -b $BRANCH_NAME
+          git commit --allow-empty -m "Empty commit to trigger PR"
+          git push origin $BRANCH_NAME
 
-            # Merge the pull request
-            PR_URL=$(gh pr view $BRANCH --json url -q .url)
-            gh pr merge "$PR_URL" --merge --delete-branch --admin
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          head: ${{ steps.create_branch.outputs.branch_name }}
+          title: "Auto PR - ${{ steps.create_branch.outputs.branch_name }}"
+          body: "This is an automatically generated pull request."
 
-            # Delay slightly to avoid API rate limit
-            sleep 5
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Merge Pull Request
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.cpr.outputs.pull-request-number }}');
+            if (!prNumber) {
+              core.setFailed("No PR number found.");
+              return;
+            }
+
+            // Merge the pull request
+            await github.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'merge'
+            });
+
+            // Delete the source branch
+            const pr = await github.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const branch = pr.data.head.ref;
+
+            await github.git.deleteRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `heads/${branch}`
+            });
