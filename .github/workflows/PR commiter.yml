@@ -1,16 +1,14 @@
-name: Auto Generate and Merge PRs
+name: Safe PR Generator
 
 on:
-  schedule:
-    - cron: "0 * * * *"  # Every hour
   workflow_dispatch:
 
 jobs:
-  generate_pr:
+  create-merge-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main branch
+      - name: Checkout main
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -21,46 +19,45 @@ jobs:
           git config user.name "Runarok"
           git config user.email "RunarokHrafn@gmail.com"
 
-      - name: Create new branch and empty commit
+      - name: Create new branch and commit
         id: create_branch
         run: |
-          BRANCH_NAME=auto-pr-$(date +%s)
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-
-          git checkout -b $BRANCH_NAME
-          git commit --allow-empty -m "Empty commit to trigger PR"
-          git push origin $BRANCH_NAME
+          BRANCH="auto-pr-$(date +%s)"
+          echo "branch_name=$BRANCH" >> $GITHUB_OUTPUT
+          git checkout -b $BRANCH
+          echo "# PR created at $(date)" > generated.md
+          git add generated.md
+          git commit -m "Auto-generated file"
+          git push origin $BRANCH
 
       - name: Create Pull Request
-        id: cpr
+        id: pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
           head: ${{ steps.create_branch.outputs.branch_name }}
-          title: "Auto PR - ${{ steps.create_branch.outputs.branch_name }}"
-          body: "This is an automatically generated pull request."
+          title: "Auto PR from ${{ steps.create_branch.outputs.branch_name }}"
+          body: "Auto PR body"
 
-      - name: Merge Pull Request
+      - name: Merge PR and Delete Branch
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prNumber = parseInt('${{ steps.cpr.outputs.pull-request-number }}');
+            const prNumber = parseInt('${{ steps.pr.outputs.pull-request-number }}');
             if (!prNumber) {
-              core.setFailed("No PR number found.");
+              core.setFailed("No PR number found");
               return;
             }
 
-            // Merge the pull request
             await github.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
-              merge_method: 'merge'
+              merge_method: 'merge',
             });
 
-            // Delete the source branch
             const pr = await github.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -68,9 +65,8 @@ jobs:
             });
 
             const branch = pr.data.head.ref;
-
             await github.git.deleteRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: `heads/${branch}`
+              ref: `heads/${branch}`,
             });
