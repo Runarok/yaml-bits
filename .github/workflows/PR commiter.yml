@@ -46,7 +46,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          head: ${{ steps.branch_ops.outputs.branch_name }}
+          branch: ${{ steps.branch_ops.outputs.branch_name }}
           title: "Create and Delete File PR"
           body: "Adds and deletes a file in the same PR."
 
