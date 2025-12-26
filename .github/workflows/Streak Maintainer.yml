@@ -11,39 +11,43 @@ jobs:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner
 
     steps:
-      # Step 1: Checkout the repository
+      # Step 1: Checkout the repository with full history and keep credentials
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch full git history so we can commit
-
-      # Step 2: Configure Git with your user info
+          fetch-depth: 0           # required to do rebases and see full history
+          persist-credentials: true # keep GITHUB_TOKEN configured for git pushes
+    
+      # Step 2: Configure Git user for commits
       - name: Configure Git
         run: |
           git config --global user.email "RunarokHrafn@gmail.com"
           git config --global user.name "Runarok"
-
-      # Step 3: Create a temporary streak file
-      # This file will contain the current date and time so each commit is unique
-      - name: Create streak file
+    
+      # Step 3: Ensure we are on the default branch (master) and update it
+      # - checkout ensures workspace is at the workflow ref; explicit checkout to master helps
+      # - pull --rebase brings local branch up-to-date with remote to avoid non-fast-forward errors
+      - name: Update local branch to latest remote
         run: |
-          echo "streak: $(date)" > .streak_temp
-
-      # Step 4: Commit the temporary streak file
-      # Git needs a real change, so this ensures the commit goes through
-      - name: Commit streak file
+          # make sure we are on master (adjust if your default branch is 'main')
+          git checkout master
+          # fetch & rebase onto remote master to avoid non-fast-forward pushes
+          git pull --rebase origin master
+    
+      # Step 4: Clean untracked files if needed (optional)
+      - name: Clean any untracked files
+        run: git clean -fd
+    
+      # Step 5: Create an empty commit to maintain the streak
+      - name: Commit empty change
         run: |
-          git add .streak_temp
-          git commit -m "chore: maintain daily streak"
-
-      # Step 5: Remove the temporary streak file to keep the repo clean
-      - name: Remove streak file
+          # Create an empty commit; this always succeeds and creates a new commit on top of current branch
+          git commit --allow-empty -m "chore: maintain_daily_streak"
+    
+      # Step 6: Push the new commit back to the repository
+      - name: Push commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git rm .streak_temp
-          git commit -m "chore: cleanup streak file"
-
-      # Step 6: Push the commits to GitHub
-      - name: Push commits
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}  # Uses GitHub Actions token
+          # Push our HEAD to origin/master. Using persist-credentials above means auth is available.
+          git push origin HEAD:master
