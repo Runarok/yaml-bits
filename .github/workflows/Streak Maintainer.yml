@@ -1,10 +1,10 @@
-name: Daily Streak Maintainer  # Name of the workflow
+name: Daily Streak Maintainer
 
-# Triggers for the workflow
+# Trigger the workflow every 6 hours, or manually from GitHub UI
 on:
   schedule:
-    - cron: "0 */6 * * *"  # Run every 6 hours
-  workflow_dispatch:       # Allow manual triggering from GitHub UI
+    - cron: "0 */6 * * *"  # Every 6 hours
+  workflow_dispatch:
 
 jobs:
   daily_streak_commit:
@@ -15,24 +15,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch the full git history (required for committing)
+          fetch-depth: 0  # Fetch full git history so we can commit
 
-      # Step 2: Configure Git with user information
+      # Step 2: Configure Git with your user info
       - name: Configure Git
         run: |
           git config --global user.email "RunarokHrafn@gmail.com"
           git config --global user.name "Runarok"
 
-      # Step 3: Remove any untracked files (optional, keeps repo clean)
-      - name: Clean any untracked files
-        run: git clean -fd
+      # Step 3: Create a temporary streak file
+      # This file will contain the current date and time so each commit is unique
+      - name: Create streak file
+        run: |
+          echo "streak: $(date)" > .streak_temp
 
-      # Step 4: Make an empty commit to maintain the streak
-      - name: Commit empty change
-        run: git commit --allow-empty -m "chore maintain_daily_streak"
+      # Step 4: Commit the temporary streak file
+      # Git needs a real change, so this ensures the commit goes through
+      - name: Commit streak file
+        run: |
+          git add .streak_temp
+          git commit -m "chore: maintain daily streak"
 
-      # Step 5: Push the commit back to the repository
-      - name: Push commit
-        uses: ad-m/github-push-action@v0.6.0  # Use a proper release version
+      # Step 5: Remove the temporary streak file to keep the repo clean
+      - name: Remove streak file
+        run: |
+          git rm .streak_temp
+          git commit -m "chore: cleanup streak file"
+
+      # Step 6: Push the commits to GitHub
+      - name: Push commits
+        uses: ad-m/github-push-action@v0.6.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Uses GitHub Actions token
