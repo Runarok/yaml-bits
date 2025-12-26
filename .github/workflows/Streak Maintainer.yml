@@ -1,0 +1,94 @@
+# ─────────────────────────────────────────────────────────────
+# Workflow Name
+# This appears in the GitHub Actions UI
+# ─────────────────────────────────────────────────────────────
+name: Daily Streak Maintainer (1 commit every 6 hours)
+
+# ─────────────────────────────────────────────────────────────
+# Triggers (WHEN this workflow runs)
+# ─────────────────────────────────────────────────────────────
+on:
+  # Run automatically on a schedule
+  schedule:
+    # ────────────── ACTIVE SCHEDULE ──────────────
+    # Every 6 hours (UTC)
+    - cron: "0 */6 * * *"
+
+    # ────────────── Cron Format Reference ──────────────
+    # ┌──────── minute (0–59)
+    # │ ┌──────── hour (0–23)
+    # │ │ ┌──────── day of month (1–31)
+    # │ │ │ ┌──────── month (1–12)
+    # │ │ │ │ ┌──────── day of week (0–6, Sunday = 0)
+    # │ │ │ │ │
+    # * * * * *
+
+    # How to read this cron:
+    # 0     → minute 0
+    # */6   → every 6 hours
+    # *     → every day
+    # *     → every month
+    # *     → every weekday
+    #
+    # Runs at: 00:00, 06:00, 12:00, 18:00 (UTC)
+
+  # Allows manual execution from the GitHub UI
+  workflow_dispatch:
+
+# ─────────────────────────────────────────────────────────────
+# Job Definition (WHAT the workflow does)
+# ─────────────────────────────────────────────────────────────
+jobs:
+  daily_streak_commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────────────────────────────────
+      # Step 1: Checkout repository
+      # Downloads the repo to the runner
+      # ─────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # ─────────────────────────────────────────
+      # Step 2: Configure Git author
+      # Required to create commits
+      # ─────────────────────────────────────────
+      - name: Configure Git identity
+        run: |
+          git config --global user.email "your-email@example.com"
+          git config --global user.name "YourName"
+
+      # ─────────────────────────────────────────
+      # Step 3: Pull latest changes
+      # Prevents conflicts
+      # ─────────────────────────────────────────
+      - name: Pull latest changes
+        run: git pull origin main
+
+      # ─────────────────────────────────────────
+      # Step 4: Make a tiny, harmless change
+      # One change = one commit
+      # ─────────────────────────────────────────
+      - name: Create daily streak commit
+        run: |
+          # File used only to maintain activity
+          FILE="streak.log"
+
+          # Add a timestamp so Git sees a change
+          echo "Streak update: $(date -u)" >> "$FILE"
+
+          # Stage and commit the change
+          git add "$FILE"
+          git commit -m "chore: maintain daily streak"
+
+      # ─────────────────────────────────────────
+      # Step 5: Push the commit to GitHub
+      # ─────────────────────────────────────────
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
