@@ -1,0 +1,141 @@
+# ─────────────────────────────────────────────────────────────
+# Workflow Name
+# This is what shows up in the GitHub Actions UI
+# ─────────────────────────────────────────────────────────────
+name: Push 100 Empty Commits Every 6 Hours
+
+# ─────────────────────────────────────────────────────────────
+# Triggers (WHEN this workflow runs)
+# ─────────────────────────────────────────────────────────────
+on:
+  # Run when code is pushed to the main branch
+  push:
+    branches:
+      - main
+
+  # Run automatically on a schedule (cron)
+  schedule:
+    # ────────────── ACTIVE SCHEDULE ──────────────
+    # Every 6 hours (UTC)
+    - cron: "0 */6 * * *"
+
+    # ────────────── Cron Format Reference ──────────────
+    # ┌──────── minute (0–59)
+    # │ ┌──────── hour (0–23)
+    # │ │ ┌──────── day of month (1–31)
+    # │ │ │ ┌──────── month (1–12)
+    # │ │ │ │ ┌──────── day of week (0–6, Sunday = 0)
+    # │ │ │ │ │
+    # * * * * *
+
+    # How to read the active cron:
+    # 0     → minute 0 (top of the hour)
+    # */6   → every 6 hours
+    # *     → every day of the month
+    # *     → every month
+    # *     → every day of the week
+    #
+    # Result:
+    # Runs at 00:00, 06:00, 12:00, 18:00 (UTC)
+
+    # ────────────── Other Common Examples (COMMENTED) ──────────────
+
+    # Every hour
+    # - cron: "0 * * * *"
+
+    # Once a day at midnight
+    # - cron: "0 0 * * *"
+
+    # Twice a day
+    # - cron: "0 0,12 * * *"
+
+    # Weekly on Sunday
+    # - cron: "0 0 * * 0"
+
+    # Monthly on the 1st
+    # - cron: "0 0 1 * *"
+
+  # Allows you to manually run this workflow from GitHub UI
+  workflow_dispatch:
+
+# ─────────────────────────────────────────────────────────────
+# Jobs (WHAT the workflow does)
+# ─────────────────────────────────────────────────────────────
+jobs:
+  push_100_empty_commits:
+    # The type of machine GitHub provides
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────────────────────────────────
+      # Step 1: Checkout the repository
+      # This downloads your repo onto the runner
+      # ─────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false  # We push later using a token
+          fetch-depth: 0              # Full git history is required
+
+      # ─────────────────────────────────────────
+      # Step 2: Set Git author info
+      # Required so commits have a valid author
+      # ─────────────────────────────────────────
+      - name: Configure Git identity
+        run: |
+          git config --global user.email "RunarokHrafn@gmail.com"
+          git config --global user.name "Runarok"
+
+      # ─────────────────────────────────────────
+      # Step 3: Sync with remote repo
+      # Prevents conflicts before committing
+      # ─────────────────────────────────────────
+      - name: Pull latest changes
+        run: git pull origin main
+
+      # ─────────────────────────────────────────
+      # Step 4: Create a file and make 100 commits
+      # Each loop iteration creates ONE commit
+      # ─────────────────────────────────────────
+      - name: Create file and commit 100 times
+        run: |
+          # Create a temporary file
+          touch Empty.Readme
+
+          # Loop from 1 to 100
+          for i in {1..100}; do
+            # Modify the file so Git detects a change
+            echo "Commit number: $i" >> Empty.Readme
+
+            # Stage the change
+            git add Empty.Readme
+
+            # Create a commit
+            git commit -m "Empty commit #$i"
+          done
+
+      # ─────────────────────────────────────────
+      # Step 5: Clean up the file
+      # Keeps the repository clean
+      # ─────────────────────────────────────────
+      - name: Delete temporary file
+        run: |
+          rm -f Empty.Readme
+          git add -A
+          git commit -m "Delete Empty.Readme after 100 commits"
+
+      # ─────────────────────────────────────────
+      # Step 6: Pull again before pushing
+      # Extra safety to avoid conflicts
+      # ─────────────────────────────────────────
+      - name: Pull latest changes before push
+        run: git pull origin main
+
+      # ─────────────────────────────────────────
+      # Step 7: Push all commits to GitHub
+      # Uses GitHub-provided token
+      # ─────────────────────────────────────────
+      - name: Push changes to remote
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
