@@ -29,10 +29,10 @@ jobs:
 
       # Step 4: Make an empty commit to maintain the streak
       - name: Commit empty change
-        run: git commit --allow-empty -m "chore: maintain daily streak"
+        run: git commit --allow-empty -m "chore maintain_daily_streak"
 
       # Step 5: Push the commit back to the repository
       - name: Push commit
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@v0.6.0  # Use a proper release version
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
+          github_token: ${{ secrets.GITHUB_TOKEN }}
